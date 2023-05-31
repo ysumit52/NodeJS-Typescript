@@ -1,0 +1,37 @@
+import { TypeOf, object, string } from 'zod';
+
+export const createUserSchema = object({
+  body: object({
+    name: string({ required_error: 'Name is required' }),
+    email: string({ required_error: 'Email is required' }).email(
+      'Invalid Email'
+    ),
+    password: string({ required_error: 'Password is required' })
+      .min(8, 'Password must be more than 8 characters')
+      .max(32, 'Password must be less than 32 characters'),
+    passwordConfirmation: string({
+      required_error: 'Confirm Password is required',
+    }),
+  }).refine((data) => data.password === data.passwordConfirmation, {
+    path: ['passwordConfirmation'],
+    message: 'Password do not match',
+  }),
+});
+
+export const loginUserSchema = object({
+  body: object({
+    email: string({ required_error: 'Email is required' }).email(
+      'Invalid email or password'
+    ),
+    password: string({ required_error: 'Password is required' }).min(
+      8,
+      'Invalid email or password'
+    ),
+  }),
+});
+
+export type CreateUserInput = Omit<
+  TypeOf<typeof createUserSchema>['body'],
+  'body.passwordConfirmation'
+>;
+export type LoginUserInput = TypeOf<typeof loginUserSchema>['body'];

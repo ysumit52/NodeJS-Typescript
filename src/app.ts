@@ -8,12 +8,16 @@ import cors from 'cors';
 import routes from './routes';
 
 import express, { Application, NextFunction, Request, Response } from 'express';
-import { ErrorModel } from './model/error.model';
+import { ErrorModel } from './interfaces/error.model';
+import connectDB from './utils/connectDB';
+import { json } from 'body-parser';
 
 const app: Application = express();
-const port = config.get<number>('PORT');
+const port = config.get<number>('port');
 
 app.use(cors());
+
+app.use(json({ limit: '1000kb' }));
 
 // Routes
 routes(app);
@@ -36,13 +40,16 @@ app.use((err: ErrorModel, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-const start = () => {
+const start = async (): Promise<void> => {
   try {
     app.listen(port, () => {
       console.log(`Server started on port: ${port}`);
     });
+    await connectDB();
   } catch (error: unknown) {
-    console.error(`Server Error: ${(error as { message: string })?.message || error}`);
+    console.error(
+      `Server Error: ${(error as { message: string })?.message || error}`
+    );
     process.exit(1);
   }
 };
